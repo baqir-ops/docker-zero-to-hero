@@ -58,7 +58,7 @@ Learned:
 
 - Image size increases with unnecessary cache files
 
-##⚡ 4️⃣ Optimized Dockerfile (v2)
+## ⚡4️⃣ Optimized Dockerfile (v2)
 
 Improved Dockerfile by cleaning apt cache:
 ```
@@ -84,13 +84,12 @@ Result:
 
 Learned:
 
-| Ubuntu	| Alpine
-|-------------- |---------
- ----------|
-| Larger size	Lightweight
-| Easier debugging	Smaller production image
-| Uses glibc	Uses musl libc
- |
+
+| Feature            | Ubuntu              | Alpine                |
+|--------------------|--------------------|------------------------|
+| Size               | Larger              | Lightweight            |
+| Debugging          | Easier              | Smaller production image |
+| C Library          | Uses glibc          | Uses musl libc         |
 
 ## 📸 Screenshot:
 
@@ -156,13 +155,13 @@ Successfully served custom HTML page.
 - Port mapping (-p 8080:80)
 
 ## 📈 Image Size Progress
-| Version      | Size
-|
-|-------------| ---------
-| v1 (Basic)	144MB
-| v2 (Optimized)	84MB
-| Multi-stage	Minimal & production ready
- |
+
+| Version        | Size                         |
+|---------------|------------------------------|
+| v1 (Basic)     | 144MB                        |
+| v2 (Optimized) | 84MB                         |
+| Multi-stage    | Minimal & production ready   |
+
 ## 🏁 Conclusion
 
 Day 03 focused on:
