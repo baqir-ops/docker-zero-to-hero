@@ -1,177 +1,202 @@
-## 📦 Day 03 – Docker Images & Dockerfile
+# 📦 Day 03 – Docker Images & Dockerfile Management
 
 ## 🎯 Objective
 
 In this lab, I learned how to:
 
-- Build custom Docker images
+- Write a Python Flask web application
+- Create a Dockerfile from scratch
+- Build a custom Docker image
+- Run and test a containerized app
+- Tag images with versions
+- Push images to Docker Hub
 
-- Optimize image size
+---
 
-- Compare Ubuntu vs Alpine
+## 📁 Project Structure
 
-- Use multi-stage builds
-
-- Debug Docker build errors
-
-- Run and test containers in browser
-
-## 🏗️ 1️⃣ Basic Dockerfile (Ubuntu + Nginx)
-
-Created a simple Dockerfile using Ubuntu as base image.
 ```
-FROM ubuntu
-RUN apt update && apt install -y nginx
-CMD ["nginx", "-g", "daemon off;"]
+Day-03-Docker-Images-Dockerfile/
+├── app/
+│   ├── app.py                  # Flask web application
+│   └── requirements.txt        # Python dependencies
+├── screenshots/                # All step screenshots
+├── Dockerfile                  # Image build instructions
+├── .dockerignore               # Files excluded from image
+└── README.md
 ```
-## 📸 Screenshot:
 
-![Basic Dockerfile](screenshots/dockerfile-basic.png)
+---
 
-## 🐳 2️⃣ Build Image (v1)
+## 🐍 The Application
+
+A simple Flask web app with two endpoints:
+
+| Endpoint | Response |
+|---|---|
+| `/` | Hello from Docker! Built by baqir-ops |
+| `/health` | OK — used in real DevOps health checks |
+
+**app/app.py**
+```python
+from flask import Flask
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Hello from Docker! Built by baqir-ops"
+
+@app.route("/health")
+def health():
+    return "OK", 200
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
 ```
-docker build -t mynginx:v1 .
-docker images
-```
-## 📸 Screenshots:
 
-![Build v1](screenshots/build-v1.png)
-![Image size v1](screenshots/image-size-v1.png)
+---
 
-Result:
+## 🐳 Dockerfile
 
-Image size was large (~144MB)
+```dockerfile
+# Base image - slim = smaller size
+FROM python:3.11-slim
 
-## 📊 3️⃣ Image Layer Analysis
-
-Used:
-```
-docker history mynginx:v1
-```
-## 📸 Screenshot:
-
-![Docker History](screenshots/docker-history-v1.png)
-
-Learned:
-
-- Each RUN instruction creates a layer
-
-- Image size increases with unnecessary cache files
-
-## ⚡4️⃣ Optimized Dockerfile (v2)
-
-Improved Dockerfile by cleaning apt cache:
-```
-FROM ubuntu
-RUN apt update && \
-    apt install -y nginx && \
-    apt clean && \
-    rm -rf /var/lib/apt/lists/*
-CMD ["nginx", "-g", "daemon off;"]
-```
-📸 Screenshots:
-
-![Optimized Dockerfile](screenshots/dockerfile-optimized.png)
-![Build v2](screenshots/build-v2.png)
-
-Result:
-
-- Reduced size from 144MB → 84MB
-
-- Saved ~60MB
-
-## 🆚 5️⃣ Ubuntu vs Alpine Comparison
-
-Learned:
-
-
-| Feature            | Ubuntu              | Alpine                |
-|--------------------|--------------------|------------------------|
-| Size               | Larger              | Lightweight            |
-| Debugging          | Easier              | Smaller production image |
-| C Library          | Uses glibc          | Uses musl libc         |
-
-## 📸 Screenshot:
-
-![Size Comparison](screenshots/size-comparison.png)
-## 🚀 6️⃣ Multi-Stage Build (Production Style)
-
-Created multi-stage Dockerfile:
-```
-FROM alpine AS builder
+# Set working directory inside container
 WORKDIR /app
-COPY index.html .
 
-FROM nginx:alpine
-COPY --from=builder /app/index.html /usr/share/nginx/html/index.html
+# Copy requirements first (layer caching trick)
+COPY app/requirements.txt .
 
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy app code
+COPY app/ .
+
+# Expose port
+EXPOSE 5000
+
+# Run the app
+CMD ["python", "app.py"]
 ```
-## 📸 Screenshot:
 
-![Multi-stage Dockerfile](screenshots/dockerfile-multistage.png)
+### 💡 Why this order matters
+Copying `requirements.txt` **before** the app code is a caching trick.
+Docker only re-runs `pip install` if requirements change — making rebuilds much faster.
 
-## 🔨 7️⃣ Build Multi-Stage Image
+---
+
+## ⚙️ Step 1 — Build the Image
+
+```bash
+docker build -t baqir-flask-app:v1 .
 ```
-docker build -t baqir-site:v1 .
+
+Docker reads the Dockerfile top to bottom and builds each layer one by one.
+
+![docker build](screenshots/01-build.png)
+
+---
+
+## 🚀 Step 2 — Run & Test the App
+
+```bash
+docker run -d -p 5000:5000 --name flask-app baqir-flask-app:v1
+curl http://localhost:5000
+curl http://localhost:5000/health
 ```
-## 📸 Screenshot:
 
-![Multi-stage Build](screenshots/build-multistage.png)
+| Flag | Meaning |
+|---|---|
+| `-d` | Run in background (detached) |
+| `-p 5000:5000` | Map host port to container port |
+| `--name flask-app` | Give container a name |
 
-## 🌐 8️⃣ Run Container
+![curl test](screenshots/02-curl-test.png)
+
+---
+
+## 📋 Step 3 — Check Running Container
+
+```bash
+docker ps
 ```
-docker run -d -p 8080:80 baqir-site:v1
+
+Shows the container is running, which port it uses, and how long it has been up.
+
+![docker ps](screenshots/03-docker-ps.png)
+
+---
+
+## 🖼️ Step 4 — View All Images
+
+```bash
+docker images | grep baqir
 ```
-## 📸 Screenshot:
 
-![Run-Container](screenshots/run-container.png)
-## 🌍 9️⃣ Browser Output
+Shows all images including v1, v2 and the Docker Hub tagged version.
+Same image ID for v1 and v2 — Docker is smart, no duplication!
 
-Opened:
+![docker images](screenshots/04-docker-images.png)
+
+---
+
+## 🌍 Step 5 — Docker Hub
+
+```bash
+docker tag baqir-flask-app:v1 baqirops/flask-app:v1
+docker push baqirops/flask-app:v1
 ```
-http://localhost:8080
+
+Image is now publicly available. Anyone can pull and run it with:
+
+```bash
+docker pull baqirops/flask-app:v1
+docker run -d -p 5000:5000 baqirops/flask-app:v1
 ```
-Successfully served custom HTML page.
 
-## 📸 Screenshot:
+🔗 https://hub.docker.com/r/baqirops/flask-app
 
-![Browser Output](screenshots/browser-output.png)
-## 🧠 Key Learnings
+![dockerhub](screenshots/05-dockerhub.png)
 
-- Dockerfile instructions create layers
+---
 
-- Always clean package cache to reduce size
+## 💡 Key Learnings
 
-- Alpine is lightweight and production-friendly
+- A **Dockerfile** is a recipe — it tells Docker exactly how to build your image
+- **Images** are blueprints. **Containers** are running instances of images
+- **Layer caching** makes rebuilds faster — order of instructions matters
+- The `/health` endpoint is a real pattern used in production DevOps pipelines
+- `docker inspect` shows full image metadata in JSON format
+- `docker history` shows every layer and its size
+- **Tagging** images (v1, v2) is how versioning works in real CI/CD pipelines
+- Pushing to **Docker Hub** makes your image globally available
 
-- Multi-stage builds reduce final image size
+---
 
-- Docker build context matters
+## ✅ Skills Practiced
 
-- Debugging COPY and container conflicts
+- Writing a Dockerfile from scratch
+- Building and tagging Docker images
+- Running containers with port mapping
+- Debugging a real build error (`=` vs `==` in requirements.txt)
+- Pushing images to Docker Hub
+- Understanding Docker layer caching
 
-- Port mapping (-p 8080:80)
+---
 
-## 📈 Image Size Progress
+## 🏆 Final Outcome
 
-| Version        | Size                         |
-|---------------|------------------------------|
-| v1 (Basic)     | 144MB                        |
-| v2 (Optimized) | 84MB                         |
-| Multi-stage    | Minimal & production ready   |
+By the end of Day 03 I was able to:
 
-## 🏁 Conclusion
+- ✅ Write a Dockerfile from scratch
+- ✅ Build a custom Docker image
+- ✅ Run a Flask app inside a container
+- ✅ Debug a real error independently
+- ✅ Push a working image to Docker Hub
+- ✅ Understand image versioning and layer caching
 
-Day 03 focused on:
+---
 
-- Image creation
-
-- Optimization
-
-- Multi-stage builds
-
-- Real-world troubleshooting
-
-This day built a strong foundation for advanced Docker concepts like Volumes and Networking.
+*Part of my DevOps learning journey → [github.com/baqir-ops](https://github.com/baqir-ops)*
