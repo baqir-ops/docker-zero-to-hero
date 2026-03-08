@@ -1,20 +1,23 @@
-# Docker Compose Multi-Container Application (Nginx + Flask + MySQL)
+# Docker Compose Multi-Container Application
+
+### Nginx + Flask + MySQL
 
 ## Project Overview
 
-This project demonstrates how to run a **multi-container application** using Docker Compose.
+This project demonstrates how to deploy a **multi-container application** using **Docker Compose**.
 
-The application architecture includes three containers:
+The stack includes:
 
 * **Nginx** – Reverse proxy web server
-* **Flask App** – Backend application
-* **MySQL** – Database server
+* **Flask** – Backend application
+* **MySQL** – Database
+* **Docker Network** – Container communication
 
-All containers communicate through a **Docker network** created automatically by Docker Compose.
+Docker Compose automatically creates a network and connects all services.
 
 ---
 
-## Architecture
+# Architecture
 
 ```
 Browser
@@ -23,7 +26,7 @@ Browser
 localhost:8080
    │
    ▼
-Nginx (Reverse Proxy)
+Nginx Reverse Proxy
    │
    ▼
 Flask Application
@@ -34,7 +37,7 @@ MySQL Database
 
 ---
 
-## Project Structure
+# Project Structure
 
 ```
 day-06-docker-compose
@@ -43,45 +46,47 @@ day-06-docker-compose
 ├── nginx
 │   └── default.conf
 ├── screenshots
+│   ├── docker-compose-start.png
+│   ├── running-containers.png
+│   ├── docker-network.png
+│   ├── network-inspect.png
+│   └── app-running-browser.png
 │
 └── README.md
 ```
 
 ---
 
-## Technologies Used
+# Technologies Used
 
 * Docker
 * Docker Compose
 * Nginx
 * Flask
 * MySQL
+* Linux
 
 ---
 
-## Services
+# Services
 
-### Nginx
+## Nginx
 
-Acts as a **reverse proxy** that forwards HTTP requests to the Flask application.
+Acts as a **reverse proxy** that forwards incoming requests to the Flask application.
 
-Port exposed:
+Port mapping:
 
 ```
 8080 → 80
 ```
 
-Configuration file:
-
-```
-nginx/default.conf
-```
-
 ---
 
-### Flask Application
+## Flask Application
 
-A simple Flask container that returns a response:
+The backend application running inside a container.
+
+Example response:
 
 ```
 Hello from Docker! Built by baqir-ops
@@ -89,9 +94,9 @@ Hello from Docker! Built by baqir-ops
 
 ---
 
-### MySQL Database
+## MySQL Database
 
-Runs inside a container and is used by the application backend.
+Database service running in a container.
 
 Environment variable used:
 
@@ -101,9 +106,9 @@ MYSQL_ROOT_PASSWORD=root
 
 ---
 
-## Running the Project
+# Running the Project
 
-Start the containers:
+Start containers:
 
 ```
 docker compose up -d
@@ -115,7 +120,7 @@ Check running containers:
 docker ps
 ```
 
-Stop the containers:
+Stop containers:
 
 ```
 docker compose down
@@ -123,61 +128,67 @@ docker compose down
 
 ---
 
-## Docker Network
+# Docker Network
 
-Docker Compose automatically creates a network for communication between containers.
+Docker Compose automatically creates a network:
 
-Example command:
+```
+day-06-docker-compose_appnet
+```
+
+Verify network:
 
 ```
 docker network inspect day-06-docker-compose_appnet
 ```
 
-This network allows containers to communicate using service names like:
+Containers communicate using service names:
 
 ```
 flask-app
 mysql-db
+nginx-web
 ```
 
 ---
 
-## Screenshots
+# Screenshots
 
-### Running Containers
+## Docker Compose Start
 
-![Running Containers](screenshots/running-containers.png)
+![Docker Compose](screenshots/docker-compose-start.png)
 
-### Docker Compose Start
+## Running Containers
 
-![Docker Compose Start](screenshots/docker-compose-start.png)
+![Docker PS](screenshots/running-containers.png)
 
-### Docker Network
+## Docker Network
 
 ![Docker Network](screenshots/docker-network.png)
 
-### Network Inspect
+## Network Inspect
 
 ![Network Inspect](screenshots/network-inspect.png)
 
-### Application Running in Browser
+## Application Running in Browser
 
-![App Running](screenshots/app-running-browser.png)
-
----
-
-## DevOps Concepts Practiced
-
-* Containerization using Docker
-* Multi-container orchestration using Docker Compose
-* Reverse proxy configuration with Nginx
-* Container networking
-* Infrastructure as Code (YAML)
+![Application](screenshots/app-running-browser.png)
 
 ---
 
-## Author
+# DevOps Concepts Practiced
 
-**Muhammad Baqir Nawaz **
+* Containerization
+* Multi-container orchestration
+* Reverse proxy configuration
+* Docker networking
+* Infrastructure as Code
+
+---
+
+# Author
+
+**Muhammad Baqir Nawaz**
 
 DevOps & Cloud Engineering Learning Journey
+
